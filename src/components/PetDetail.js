@@ -1,7 +1,31 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React from "react";
-import petsData from "../petsData";
+import { useParams } from "react-router-dom";
+import { deleteById, getPestsByID, upDateById } from "../api/pets";
+
 const PetDetail = () => {
-  const pet = petsData[0];
+  const { petId } = useParams();
+
+  const queryClient = useQueryClient();
+
+  const { data: pet } = useQuery({
+    queryKey: ["pet"],
+    queryFn: () => getPestsByID(petId),
+  });
+  const { mutate: adoptPet } = useMutation({
+    mutationFn: () => upDateById(pet.name, pet.type, pet.image, petId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["pet"] }),
+  });
+  const { mutate: petD } = useMutation({
+    mutationKey: ["petpet"],
+    mutationFn: () => deleteById(petId),
+    onSuccess: queryClient({ queryKey: ["petpet"], petId }),
+  });
+  console.log(pet);
+  if (pet == undefined) {
+    return <h1>There is no pet with the id: ${petId}</h1>;
+  }
+
   return (
     <div className="bg-[#F9E3BE] w-screen h-[100vh] flex justify-center items-center">
       <div className="border border-black rounded-md w-[70%] h-[70%] overflow-hidden flex flex-col md:flex-row p-5">
@@ -17,11 +41,18 @@ const PetDetail = () => {
           <h1>Type: {pet.type}</h1>
           <h1>adopted: {pet.adopted}</h1>
 
-          <button className="w-[70px] border border-black rounded-md  hover:bg-green-400 mb-5">
+          <button
+            onClick={adoptPet}
+            onCanPlay={getPestsByID}
+            className="w-[70px] border border-black rounded-md  hover:bg-green-400 mb-5"
+          >
             Adobt
           </button>
 
-          <button className="w-[70px] border border-black rounded-md  hover:bg-red-400">
+          <button
+            onClick={petD}
+            className="w-[70px] border border-black rounded-md  hover:bg-red-400"
+          >
             Delete
           </button>
         </div>
